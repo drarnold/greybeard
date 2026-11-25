@@ -1,0 +1,22 @@
+{
+  "name": "greybeard",
+  "interface": {
+    "displayName": "Greybeard"
+  },
+  "plugins": [
+    {
+      "name": "greybeard",
+      "version": "0.1.0",
+      "description": "30 skills covering planning, building, verifying, shipping, and running software.",
+      "source": {
+        "source": "local",
+        "path": "./"
+      },
+      "policy": {
+        "installation": "AVAILABLE",
+        "authentication": "ON_INSTALL"
+      },
+      "category": "Productivity"
+    }
+  ]
+}

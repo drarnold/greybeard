@@ -1,0 +1,29 @@
+{
+  "name": "greybeard",
+  "version": "0.1.0",
+  "description": "Skills for the whole software lifecycle, from the vague ticket to the 3 a.m. page.",
+  "author": {
+    "name": "Drew Arnold",
+    "url": "https://github.com/drarnold"
+  },
+  "homepage": "https://github.com/drarnold/greybeard",
+  "repository": "https://github.com/drarnold/greybeard",
+  "license": "MIT",
+  "skills": "./skills/",
+  "interface": {
+    "displayName": "Greybeard",
+    "shortDescription": "Twenty years of 3 a.m. pages, as agent skills: plan, build, verify, ship, and run.",
+    "longDescription": "Greybeard bundles 30 engineering skills covering requirements, estimation, TDD, refactoring, API design, security review, release and rollback, incident triage, postmortems, and team process.",
+    "developerName": "Drew Arnold",
+    "category": "Productivity",
+    "capabilities": [
+      "Interactive",
+      "Read",
+      "Write"
+    ],
+    "defaultPrompt": [
+      "Which Greybeard skill fits this task?",
+      "Review this change using the relevant Greybeard skills"
+    ]
+  }
+}

@@ -1,3 +1,3 @@
-module github.com/drarnold/platform-engineering-skills
+module github.com/drarnold/greybeard
 
 go 1.27

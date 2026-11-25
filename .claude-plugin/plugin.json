@@ -1,0 +1,12 @@
+{
+  "name": "greybeard",
+  "version": "0.1.0",
+  "description": "Skills for the whole software lifecycle, from the vague ticket to the 3 a.m. page, written by someone who has been paged.",
+  "author": {
+    "name": "Drew Arnold"
+  },
+  "homepage": "https://github.com/drarnold/greybeard",
+  "repository": "https://github.com/drarnold/greybeard",
+  "license": "MIT",
+  "skills": "./skills"
+}

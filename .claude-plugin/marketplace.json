@@ -1,0 +1,23 @@
+{
+  "$schema": "https://json.schemastore.org/claude-code-marketplace.json",
+  "name": "greybeard",
+  "description": "Skills for the whole software lifecycle, from the vague ticket to the 3 a.m. page.",
+  "owner": {
+    "name": "Drew Arnold",
+    "url": "https://github.com/drarnold"
+  },
+  "plugins": [
+    {
+      "name": "greybeard",
+      "version": "0.1.0",
+      "source": {
+        "source": "github",
+        "repo": "drarnold/greybeard"
+      },
+      "description": "30 skills covering planning, building, verifying, shipping, and running software.",
+      "homepage": "https://github.com/drarnold/greybeard",
+      "license": "MIT",
+      "keywords": ["skills", "agents", "sdlc", "sre", "code-review", "tdd", "incident-response"]
+    }
+  ]
+}

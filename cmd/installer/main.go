@@ -7,11 +7,12 @@ import (
 	"net/http"
 	"os"
 	"path/filepath"
+	"sort"
 	"strings"
 	"time"
 )
 
-const rawBaseURL = "https://raw.githubusercontent.com/drarnold/platform-engineering-skills/main"
+const rawBaseURL = "https://raw.githubusercontent.com/drarnold/greybeard/main"
 
 var allSkills = []string{
 	"incident-triage",
@@ -19,10 +20,71 @@ var allSkills = []string{
 	"ci-cd-hardening",
 	"observability-slos",
 	"code-review-staff",
+	// discover and plan
+	"requirements-grilling",
+	"story-slicing",
+	"estimation-sanity",
+	"spike-and-prototype",
+	// build
+	"tdd-red-green",
+	"refactor-safely",
+	"legacy-code-archaeology",
+	"api-design",
+	"error-handling",
+	"comment-cleanup",
+	// verify
+	"test-strategy",
+	"security-review",
+	"performance-profiling",
+	// ship and run
+	"release-and-rollback",
+	"dependency-hygiene",
+	"tech-debt-triage",
+	"postmortem-writer",
+	// process and style
+	"trunk-based-development",
+	"scrum-ceremonies-sanity",
+	"kanban-flow",
+	"monorepo-vs-polyrepo",
+	"agentic-coding-hygiene",
+	// people
+	"pr-description-writer",
+	"onboarding-docs",
+	"adr-keeper",
+}
+
+// skillDirTargets install a SKILL.md into <dir>/<skill>/SKILL.md.
+var skillDirTargets = map[string]string{
+	"claude":      filepath.Join(".claude", "skills"),
+	"codex":       filepath.Join(".codex", "skills"),
+	"gemini":      filepath.Join(".gemini", "skills"),
+	"copilot":     filepath.Join(".github", "skills"),
+	"opencode":    filepath.Join(".opencode", "skills"),
+	"kiro":        filepath.Join(".kiro", "skills"),
+	"commandcode": filepath.Join(".commandcode", "skills"),
+	"agents":      filepath.Join(".agents", "skills"),
+}
+
+// ruleFileTargets install a single flat file <dir>/<skill><ext>.
+var ruleFileTargets = map[string]struct{ dir, ext string }{
+	"cursor":   {filepath.Join(".cursor", "rules"), ".mdc"},
+	"windsurf": {filepath.Join(".windsurf", "rules"), ".md"},
+}
+
+func supportedTargets() string {
+	names := make([]string, 0, len(skillDirTargets)+len(ruleFileTargets))
+	for n := range skillDirTargets {
+		names = append(names, n)
+	}
+	for n := range ruleFileTargets {
+		names = append(names, n)
+	}
+	sort.Strings(names)
+	return strings.Join(names, ", ")
 }
 
 func main() {
-	target := flag.String("target", "claude", "Agent target: claude, cursor, windsurf, or codex")
+	target := flag.String("target", "claude", "Agent target: "+supportedTargets())
 	installAll := flag.Bool("all", false, "Install all skills")
 	flag.Parse()
 
@@ -32,7 +94,7 @@ func main() {
 	} else if flag.NArg() == 1 {
 		selected = []string{flag.Arg(0)}
 	} else {
-		fmt.Fprintln(os.Stderr, "Usage: installer [--target claude|cursor|windsurf|codex] [--all | <skill-name>]")
+		fmt.Fprintf(os.Stderr, "Usage: installer [--target %s] [--all | <skill-name>]\n", strings.ReplaceAll(supportedTargets(), ", ", "|"))
 		os.Exit(1)
 	}
 
@@ -47,18 +109,14 @@ func main() {
 }
 
 func destPathFor(target, skill string) (string, error) {
-	switch strings.ToLower(target) {
-	case "claude":
-		return filepath.Join(".claude", "skills", skill, "SKILL.md"), nil
-	case "cursor":
-		return filepath.Join(".cursor", "rules", skill+".mdc"), nil
-	case "windsurf":
-		return filepath.Join(".windsurf", "rules", skill+".md"), nil
-	case "codex":
-		return filepath.Join(".codex", "skills", skill, "SKILL.md"), nil
-	default:
-		return "", fmt.Errorf("unsupported target %q (expected claude, cursor, windsurf, or codex)", target)
+	t := strings.ToLower(target)
+	if dir, ok := skillDirTargets[t]; ok {
+		return filepath.Join(dir, skill, "SKILL.md"), nil
 	}
+	if r, ok := ruleFileTargets[t]; ok {
+		return filepath.Join(r.dir, skill+r.ext), nil
+	}
+	return "", fmt.Errorf("unsupported target %q (expected one of: %s)", target, supportedTargets())
 }
 
 func installSkill(client *http.Client, target, skill string) error {
