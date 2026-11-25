@@ -305,7 +305,7 @@ Not enforced by the code, but you'll feel them in every skill.
 
 ## 🧪 Trust, But Verify
 
-The Greybeard has been wrong before, which is how they got to be the Greybeard. (Even Gandalf trusted Saruman once. Trust, but verify.) So the skills get tested. The harness in [`cmd/evals`](cmd/evals/main.go) runs in two stages.
+The Greybeard has been wrong before, which is how they got to be the Greybeard. (Even Gandalf trusted Saruman once. Trust, but verify.) So the skills get tested. The harness in [`cmd/evals`](cmd/evals/main.go) runs in two stages, and its cases live in [`cases.go`](cmd/evals/cases.go).
 
 ```mermaid
 flowchart TD
@@ -320,14 +320,44 @@ flowchart TD
     S1 --> S2
 ```
 
-### The trap, and what the model has to catch
+### The traps
 
-| Skill | The trap | It must… |
+Every skill has a fixture with a known problem baked in, and the model has to catch it. Each eval runs three or four assertions against the response.
+
+| Skill | Fixture | The trap |
 |---|---|---|
-| `code-review-staff` | [`bad_migration.sql`](evals/fixtures/bad_migration.sql) | flag it `[BLOCKER]`, demand `CONCURRENTLY` on the index, and spot the lock/default risk |
-| `ci-cd-hardening` | [`insecure_workflow.yml`](evals/fixtures/insecure_workflow.yml) | flag it `[CRITICAL]`, catch the script injection, and demand SHA-pinned actions |
+| `code-review-staff` | [`bad_migration.sql`](evals/fixtures/bad_migration.sql) | `NOT NULL` column and a plain `CREATE INDEX` on an 80M-row table |
+| `ci-cd-hardening` | [`insecure_workflow.yml`](evals/fixtures/insecure_workflow.yml) | script injection, mutable action tags, no `permissions:` |
+| `incident-triage` | [`incident_alert.txt`](evals/fixtures/incident_alert.txt) | mid-incident chat pushing `kubectl delete` and `terraform apply` before anyone reads a log |
+| `architecture-rfc` | [`rfc_proposal.md`](evals/fixtures/rfc_proposal.md) | big-bang cutover, "no downsides", infinite retries, no non-goals |
+| `observability-slos` | [`service_spec.md`](evals/fixtures/service_spec.md) | `user_id` metric labels, average latency, paging on CPU |
+| `requirements-grilling` | [`vague_ticket.md`](evals/fixtures/vague_ticket.md) | "Add export. Make it fast." |
+| `story-slicing` | [`big_epic.md`](evals/fixtures/big_epic.md) | an epic split by layer, nothing demoable until week 14 |
+| `estimation-sanity` | [`single_number_request.md`](evals/fixtures/single_number_request.md) | a PM demanding one number with no caveats |
+| `spike-and-prototype` | [`spike_request.md`](evals/fixtures/spike_request.md) | "we'll just clean up the prototype and ship it Friday" |
+| `tdd-red-green` | [`buggy_discount.py`](evals/fixtures/buggy_discount.py) | `>` where the spec says `>=` |
+| `refactor-safely` | [`messy_controller.py`](evals/fixtures/messy_controller.py) | a 25-line signup handler that does everything and has no tests |
+| `legacy-code-archaeology` | [`legacy_batch.sh`](evals/fixtures/legacy_batch.sh) | `sleep 47`, `rm`, hardcoded IPs, and no documentation |
+| `api-design` | [`api_change.diff`](evals/fixtures/api_change.diff) | renamed fields, unsafe retries on `POST`, unbounded list, errors returned as `200` |
+| `error-handling` | [`swallowed_errors.go.txt`](evals/fixtures/swallowed_errors.go.txt) | ignored errors, no timeout, infinite retry loop with no backoff |
+| `comment-cleanup` | [`over_commented.py`](evals/fixtures/over_commented.py) | narration and change-log comments around one essential *why* |
+| `test-strategy` | [`flaky_suite.md`](evals/fixtures/flaky_suite.md) | 42-minute suite, retries as a flake policy, 92% coverage of mocks |
+| `security-review` | [`vulnerable_handler.py`](evals/fixtures/vulnerable_handler.py) | SQL concatenation, IDOR, hardcoded keys, passwords in logs |
+| `performance-profiling` | [`slow_endpoint.md`](evals/fixtures/slow_endpoint.md) | a proposed Rust rewrite for an N+1 query nobody measured |
+| `release-and-rollback` | [`release_plan.md`](evals/fixtures/release_plan.md) | Friday 4:30 PM, 140 PRs, column drop, "redeploy the old version" |
+| `dependency-hygiene` | [`package_diff.md`](evals/fixtures/package_diff.md) | `*` and `latest` versions, abandoned package, no lockfile, `curl | bash` |
+| `tech-debt-triage` | [`debt_backlog.md`](evals/fixtures/debt_backlog.md) | a 14-month rewrite proposed beside a flaky script that causes weekly incidents |
+| `postmortem-writer` | [`incident_notes.md`](evals/fixtures/incident_notes.md) | notes that blame one engineer by name |
+| `trunk-based-development` | [`branching_pain.md`](evals/fixtures/branching_pain.md) | a trunk-based mandate with 55-minute flaky CI and no flags |
+| `scrum-ceremonies-sanity` | [`scrum_complaints.md`](evals/fixtures/scrum_complaints.md) | 40-minute standup, no sprint goal, velocity used as a weapon |
+| `kanban-flow` | [`flow_data.md`](evals/fixtures/flow_data.md) | 14 items in progress for 5 people, 9 stuck in review |
+| `monorepo-vs-polyrepo` | [`repo_question.md`](evals/fixtures/repo_question.md) | "everything in one repo like Google" with no build-tool expertise |
+| `agentic-coding-hygiene` | [`agent_diff.patch`](evals/fixtures/agent_diff.patch) | an agent that deleted a test, hardcoded a key, and invented an API |
+| `pr-description-writer` | [`raw_changes.md`](evals/fixtures/raw_changes.md) | commits named `wip` and `fix stuff` on the checkout path |
+| `onboarding-docs` | [`bad_readme.md`](evals/fixtures/bad_readme.md) | "Install Node" and "ask Mike for the `.env`" |
+| `adr-keeper` | [`decision_thread.md`](evals/fixtures/decision_thread.md) | a Slack thread that made a real decision and recorded nothing |
 
-> **Honest status:** all 30 skills pass lint. Live evals cover only `code-review-staff` and `ci-cd-hardening`. The other 28 are untested beyond lint, and the Greybeard has opinions about untested code. Fixtures and evals for them are the next order of business. Even Gandalf checked the maps before entering Moria. (Mostly.)
+> **Honest status:** all 30 skills pass lint and all 30 have a live eval. The assertions are keyword checks on model output, so they are a smoke test and not proof. They have not yet been run against a live model in CI, so expect the first run to shake out a few brittle checks. The Greybeard would rather you hear it from him.
 
 ### Run it yourself
 
@@ -335,11 +365,20 @@ flowchart TD
 # Lint only: fast, free, no key
 go run ./cmd/evals --lint-only
 
-# The full interrogation: lint + live model evals
+# Offline tests: every skill has an eval, every fixture exists
+go test ./...
+
+# The full interrogation: lint + live model evals (4 at a time)
 ANTHROPIC_API_KEY=sk-ant-... go run ./cmd/evals
+
+# Just one or two skills
+ANTHROPIC_API_KEY=sk-ant-... go run ./cmd/evals --only security-review,api-design
+
+# Try a different model
+EVAL_MODEL=claude-sonnet-4-20250514 ANTHROPIC_API_KEY=sk-ant-... go run ./cmd/evals
 ```
 
-In GitHub Actions, lint gates the live evals. Live evals skip on fork PRs, because secrets don't go to strangers (see Law 9).
+In GitHub Actions, lint and tests gate the live evals. Live evals skip on fork PRs, because secrets don't go to strangers (see Law 9).
 
 ---
 
@@ -367,8 +406,8 @@ Got scars of your own? Add a skill. Every fellowship needs more than one wizard:
    ```
 2. Keep it under **2,200 estimated tokens**. Wisdom should be concise. Lint enforces this.
 3. Add the name to `allSkills` in [`cmd/installer/main.go`](cmd/installer/main.go).
-4. Prove it works: add a bad fixture in `evals/fixtures/` and an eval in [`cmd/evals/main.go`](cmd/evals/main.go) that the skill has to pass.
-5. Run `go run ./cmd/evals --lint-only`, then open a PR.
+4. Prove it works: add a bad fixture in `evals/fixtures/` and an eval case in [`cmd/evals/cases.go`](cmd/evals/cases.go) that the skill has to pass. `go test ./...` fails if a skill has no eval.
+5. Run `go test ./...` and `go run ./cmd/evals --lint-only`, then open a PR.
 
 ---
 

@@ -1,0 +1,28 @@
+package payments
+
+import (
+	"encoding/json"
+	"io"
+	"net/http"
+)
+
+func Charge(orderID string, cents int) {
+	for {
+		resp, err := http.Get("https://psp.example.com/charge?order=" + orderID)
+		if err != nil {
+			continue
+		}
+		body, _ := io.ReadAll(resp.Body)
+		var out struct{ OK bool }
+		_ = json.Unmarshal(body, &out)
+		if out.OK {
+			markPaid(orderID)
+			return
+		}
+	}
+}
+
+func markPaid(orderID string) {
+	_, _ = db.Exec("UPDATE orders SET paid = true WHERE id = ?", orderID)
+	_ = sendReceipt(orderID)
+}

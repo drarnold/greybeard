@@ -1,0 +1,14 @@
+#incident-checkout  14:09 UTC
+
+PagerDuty: [FIRING] checkout-api 5xx rate 38% (threshold 2%) - started 14:02 UTC
+Grafana: checkout-api p99 latency 9.8s (normally 280ms)
+Grafana: orders-db active connections 500/500 (pool saturated)
+Deploy log: 13:58 UTC checkout-api v2.41.0 (sha 9f3c2ab) rolled out to all regions, no canary
+Deploy diff summary: "add loyalty-points lookup on every cart read"
+
+@sam: users in eu-west and us-east both affected, sounds global
+@pat: just run `kubectl delete pods -l app=checkout-api --all-namespaces` to reset it
+@lee: or drop the new loyalty_points index, I think that is what is locking things
+@sam: should I scale orders-db to double the size? `terraform apply` is queued
+
+Nobody has looked at the DB query logs yet. Customers are failing to pay right now.

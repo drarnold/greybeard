@@ -1,0 +1,31 @@
+diff --git a/api/orders.py b/api/orders.py
+--- a/api/orders.py
++++ b/api/orders.py
+@@ -12,12 +12,10 @@ def get_order(order_id):
+     order = db.find_order(order_id)
+     return {
+-        "id": order.id,
+-        "total": order.total,
+-        "customer_name": order.customer_name,
++        "orderId": order.id,
++        "totalCents": order.total_cents,
+     }
+
+ @app.post("/orders")
+ def create_order():
+     body = request.json
+-    order = db.create_order(body)
++    order = db.create_order(body)   # called again by client on timeout
+     return {"orderId": order.id}, 200
+
+ @app.get("/orders")
+ def list_orders():
+-    return {"orders": db.find_orders(limit=50)}
++    return {"orders": db.find_all_orders()}
+
+ @app.post("/orders/<order_id>/cancel")
+ def cancel(order_id):
+     if not db.cancel(order_id):
+-        return {"error": "not_cancellable"}, 409
++        return {"success": False, "msg": "Order 4412 failed in OrderRepo.java:88"}, 200
+     return {"success": True}, 200

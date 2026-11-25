@@ -7,7 +7,7 @@ Guidance for AI coding agents (OpenCode, Codex, Copilot, Gemini CLI, Cursor, and
 ## Layout
 - `skills/<name>/SKILL.md`: one skill per folder, the only thing users install.
 - `cmd/installer`: copies skills into each agent's expected directory.
-- `cmd/evals`: static lint plus live LLM evals. Run `go run ./cmd/evals --lint-only` before every PR.
+- `cmd/evals`: static lint plus live LLM evals. Run `go test ./...` and `go run ./cmd/evals --lint-only` before every PR; every skill needs a case in `cmd/evals/cases.go` and a fixture in `evals/fixtures/`.
 - `evals/fixtures/`: deliberately bad inputs for evals.
 - `CLAUDE.md`: code-comment policy.
 
@@ -15,7 +15,7 @@ Guidance for AI coding agents (OpenCode, Codex, Copilot, Gemini CLI, Cursor, and
 - Keep each `SKILL.md` under 2,200 estimated tokens (lint enforces this).
 - Frontmatter needs `name` (matching the folder) and a one-sentence `description` stating what it does and when to use it.
 - Register a new skill in `allSkills` in `cmd/installer/main.go` and list it in the README.
-- Add a fixture and eval for it when the failure is catchable.
+- Add a fixture in `evals/fixtures/` and a case in `cmd/evals/cases.go`. `go test ./...` fails without one.
 
 ## Skill Routing
 If a task matches a skill and the skill is installed, invoke it rather than improvising.
